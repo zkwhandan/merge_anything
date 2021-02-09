@@ -1,0 +1,163 @@
+<html>
+
+<head>
+    <title>BUILD</title>
+    <meta charset="utf-8">
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/vue-json-viewer/vue-json-viewer.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+
+<body>
+    <div id="app">
+        <div style="width: 600px; float:left;">
+            <el-tabs value="first">
+                <el-tab-pane label="素材制作" name="first">
+                    <el-form :inline="true" v-for="(ball, index) in balls" size="mini" :key="index">
+                        <el-form-item label="直径">
+                            <el-input v-model="ball.w" :disabled="true" style="width:60px"></el-input>
+                        </el-form-item>
+                        <el-form-item label="环宽度">
+                            <el-input-number v-model="ball.bw" controls-position="right" style="width:90px"
+                                @change="get_ball_url(index)"></el-input-number>
+                        </el-form-item>
+                        <el-form-item label="环颜色">
+                            <el-color-picker v-model="ball.bc" @change="get_ball_url(index)"></el-color-picker>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-upload ref="upload" class="avatar-uploader" action="" :auto-upload="false"
+                                :show-file-list="false" :on-change="function(){get_ball_url(index)}">
+                                <el-button slot="trigger" type="primary">选取图片</el-button>
+                            </el-upload>
+                        </el-form-item>
+                    </el-form>
+
+                    <el-form :inline="true" size="mini">
+                        <el-form-item label="背景主图片链接">
+                            <el-input v-model="background"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-form :inline="true" size="mini">
+                        <el-form-item label="背景底图片链接">
+                            <el-input v-model="background2"></el-input>
+                        </el-form-item>
+                    </el-form>
+                </el-tab-pane>
+
+                <el-tab-pane label="生成游戏" name="second">
+                    <el-form :inline="true" v-for="(ball, index) in balls" size="mini" :key="index">
+                        <el-form-item label="直径">
+                            <el-input v-model="ball.w" :disabled="true" style="width:60px"></el-input>
+                        </el-form-item>
+                        <el-form-item label="图片">
+                            <el-input v-model="ball.img"></el-input>
+                        </el-form-item>
+                    </el-form>
+
+                    <el-form :inline="true" size="mini">
+                        <el-form-item label="背景主图片链接">
+                            <el-input v-model="background"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-form :inline="true" size="mini">
+                        <el-form-item label="背景底图片链接">
+                            <el-input v-model="background2"></el-input>
+                        </el-form-item>
+                    </el-form>
+
+                    <el-form :inline="true" size="mini">
+                        <el-form-item label="游戏名称">
+                            <el-input v-model="title"></el-input>
+                        </el-form-item>
+                    </el-form>
+
+                    <div style="margin: 30px 0;">
+                        <el-link :href="game_url" type="success" target="_blank">生成游戏【{{title}}】</el-link>
+                        参数长度{{game_url.length}}应小于1000，否则应使用图床
+                    </div>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+        <div style="float:left; width: 432px; height: 768px;">
+            <div
+                :style="'transform: scale(0.6);transform-origin: left top; width:720px; height:1280px; background:url('+background2+') no-repeat bottom,url('+background+')'">
+                <img :src="ball.img" v-for="(ball, index) in balls" style="margin: 10px;" :key="index">
+            </div>
+        </div>
+    </div>
+    <script>
+        Vue.use(JsonView.default)
+        app = new Vue({
+            el: '#app',
+            data: {
+                title: "",
+                balls: [
+                    { w: 32, bw: 2, bc: "#000", img: "" },
+                    { w: 32, bw: 2, bc: "#000", img: "" },
+                    { w: 64, bw: 2, bc: "#000", img: "" },
+                    { w: 128, bw: 2, bc: "#000", img: "" },
+                    { w: 256, bw: 2, bc: "#000", img: "" },
+                    { w: 256, bw: 2, bc: "#000", img: "" }
+                ],
+                background: "http://www.wesane.com/game/654/res/raw-assets/85/856267d0-6891-4660-a28a-3eb110bf6395.png",
+                background2: "http://www.wesane.com/game/654/res/raw-assets/eb/ebdc0e91-9eb2-40b6-8211-5061a73bb542.png",
+            },
+            created: function () {
+                for (i = 0; i < this.balls.length; i++) {
+                    this.get_ball_url(i);
+                }
+            },
+            computed: {
+                game_url: function () {
+                    params = [this.title, this.background, this.background2]
+                    for (i = 0; i < this.balls.length; i++) {
+                        params.push(this.balls[i].img);
+                    }
+                    return "./game" + "?params=" + encodeURI(JSON.stringify(params));
+                }
+            },
+            methods: {
+                get_ball_url: function (i) {
+                    width = this.balls[i].w;
+                    border_width = this.balls[i].bw;
+                    border_color = this.balls[i].bc;
+                    xml = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{width}" height="{width}"> <defs> <pattern id="pattern-image" x="0" y="0" width="{width}" height="{width}" patternUnits="userSpaceOnUse"> <image xlink:href="{image}" x="0" y="0" width="{width}" height="{width}" preserveAspectRatio="xMidYMid slice"> </image> </pattern> </defs> <circle cx="{center}" cy="{center}" r="{r}" stroke="{border_color}" stroke-width="{border_width}" fill="url(#pattern-image)" /> </svg>';
+                    xml = xml.replaceAll("{width}", width)
+                        .replaceAll("{border_color}", border_color)
+                        .replaceAll("{border_width}", border_width)
+                        .replaceAll("{center}", width / 2)
+                        .replaceAll("{r}", width / 2 - border_width / 2);
+                    this.balls[i].img = "data:image/svg+xml;base64," + btoa(xml);
+
+                    images = [];
+                    if (this.$refs.hasOwnProperty("upload")) {
+                        images = this.$refs.upload[i].$refs["upload-inner"].fileList;
+                    }
+                    if (images.length > 0) {
+                        reader = new FileReader();
+                        reader.readAsDataURL(images[images.length - 1].raw);
+                        ball = this.balls[i];
+                        reader.onload = function () {
+                            src = "data:image/svg+xml;base64," + btoa(xml.replaceAll("{image}", reader.result));
+                            var c = document.createElement("canvas");
+                            c.width = width;
+                            c.height = width;
+                            var ctx = c.getContext("2d");
+                            var img = new Image();
+                            img.src = src;
+                            img.onload = function () {
+                                ctx.drawImage(img, 0, 0, width, width);
+                                url = c.toDataURL("image/png");
+                                ball.img = url;
+                            };
+                        }
+                    }
+                }
+            }
+
+        })
+    </script>
+</body>
+
+</html>
